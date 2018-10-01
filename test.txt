@@ -1,0 +1,12 @@
+8/21:
+1)Installing ubuntu on windows: Used Ubuntu bash
+2)Install rbenv install -v 2.2.3
+If not installed gives gcc error.
+To install gcc: use command : sudo apt-get install build-essential
+3) get version of postgresql : pg_config –version
+
+9/24/18
+Trying to solve the installation errors by creating a new app called pronet
+Link to get the issue resolved:
+https://gist.github.com/sionc/8574230
+
