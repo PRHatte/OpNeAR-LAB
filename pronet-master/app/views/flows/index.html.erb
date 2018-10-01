@@ -1,0 +1,36 @@
+<div class="col-md-12">
+  <h1>Flows</h1>
+
+  <table class="table table-bordered table-striped">                         
+    <tr>                          
+      <th>Title</th>
+      <th>User Email</th>
+      <th>Source</th>
+  	  <th>Destination</th>
+      <th>Status</th>
+    	<th>Start Time</th>
+      <th>End Time</th>
+      <th>Minimum Bandwidth</th>
+      <th>Bandwidth Units</th>
+  	  <th>Maximum Latency</th>
+      <th></th>
+      <th></th>
+    </tr>
+  <% @flows.each do |flow| %>      
+    <tr>
+      <td><%= link_to flow.title, flow%></td>  
+      <td><%= flow.user.try(:email) %></td>
+      <td><%= flow.src %></td> 
+  	  <td><%= flow.dst %></td>
+  	  <td><%= flow.english_status %></td>
+  	  <td><%= flow.start_time %></td>
+      <td><%= flow.end_time %></td>
+  	  <td><%= flow.min_bandwidth %></td>
+      <td><%= flow.bandwidth_unit %></td>
+  	  <td><%= flow.latency %></td>
+      <td><%= link_to "Approve", advance_flow_path(flow, 1), method: :post, data: { confirm: "You sure?" }, class: 'btn btn-success' %></td>
+      <td><%= link_to "Deny", advance_flow_path(flow, 3), method: :post, data: { confirm: "You sure?" }, class: 'btn btn-danger' %></td>
+    </tr>
+  <% end %>                        
+  </table>
+</div>

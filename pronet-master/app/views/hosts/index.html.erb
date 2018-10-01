@@ -1,0 +1,22 @@
+<div class="col-md-12">
+  <h1>All Hosts</h1>
+  <!-- Include a search here -->
+  <table class="table table-bordered table-striped table-hover">
+    <thead>
+      <th>Hostname</th>
+      <th>Hardware Address</th>
+      <th>Host Segment</th>
+      <th>Node ID</th>
+    </thead>
+    <tbody>
+      <% @hosts.each do |host| %>
+        <tr>
+          <td><%= link_to host.host_name, host_path(host) %></td>
+          <td><%= host.host_hwaddress %></td>
+          <td><%= host.host_segment %></td>
+          <td><%= host.node_id %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,54 @@
+# == Schema Information
+#
+# Table name: flows
+#
+#  id             :integer          not null, primary key
+#  ext_flow_id    :integer
+#  title          :string
+#  dst            :string
+#  src            :string
+#  status         :integer
+#  start_time     :datetime
+#  end_time       :datetime
+#  min_bandwidth  :decimal(, )
+#  max_bandwidth  :decimal(, )
+#  bandwidth_unit :string
+#  latency        :integer
+#  method         :string
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  bw             :decimal(, )
+#  duration       :decimal(, )
+#  startt         :decimal(, )
+#  user_id        :integer
+#
+# Indexes
+#
+#  index_flows_on_ext_flow_id  (ext_flow_id) UNIQUE
+#
+
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  title: MyString
+  destination: MyString
+  source: MyString
+  status: 1
+  time_reserved: 2017-02-21 20:58:03
+  min_bandwidth: 9.99
+  max_bandwidth: 9.99
+  bandwidth_unit: MyString
+  latency: 1
+  method: MyString
+
+two:
+  title: MyString
+  destination: MyString
+  source: MyString
+  status: 1
+  time_reserved: 2017-02-21 20:58:03
+  min_bandwidth: 9.99
+  max_bandwidth: 9.99
+  bandwidth_unit: MyString
+  latency: 1
+  method: MyString

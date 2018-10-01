@@ -1,0 +1,11 @@
+FROM ruby:2.3.3
+RUN apt-get update -qq && apt-get install -y build-essential libpq-dev nodejs postgresql-client
+RUN mkdir /pronet
+WORKDIR /pronet
+ADD Gemfile /pronet/Gemfile
+ADD Gemfile.lock /pronet/Gemfile.lock
+RUN bundle install
+ADD /bin /docker
+RUN chmod +x -R /docker
+ADD . /pronet
+ENTRYPOINT /docker/start-rails.sh

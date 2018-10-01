@@ -1,0 +1,48 @@
+<div class="col-md-4">
+  <div class="well">
+    <h1>Host Information</h1>
+
+    <p class="lead">
+      Name: <%= @host.host_name %>
+    </p>
+
+    <b>Host ID: </b><%= @host.host_id %><br>
+    <b>Node ID: </b><%= @host.node_id %><br>
+    <b>Hardware Address: </b><%= @host.host_hwaddress %><br>
+    <b>Host Segment: </b><%= @host.host_segment %><br>
+    <b>Node Controller: </b><%= @host.node_controller %>
+  </div>
+</div>
+<div class="col-md-8">
+  <h1>Authorized Users</h1>
+  <table class="table table-bordered table-striped table-hover">
+    <thead>
+      <th>Email</th>
+      <th></th>
+    </thead>
+    <tbody>
+      <% @authorized_users.each do |user| %>
+        <tr>
+          <td><%= user.email %></td>
+          <td><%= link_to "Deauthorize", deauthorize_host_path(@host, user_id: user), method: :post, class: 'btn btn-danger' %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <h1>Unauthorized Users</h1>
+  <table class="table table-bordered table-striped table-hover">
+    <thead>
+      <th>Email</th>
+      <th></th>
+    </thead>
+    <tbody>
+      <% @unautorized_users.each do |user| %>
+        <tr>
+          <td><%= user.email %></td>
+          <td><%= link_to "Authorize", authorize_host_path(@host, user_id: user), method: :post, class: 'btn btn-success' %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

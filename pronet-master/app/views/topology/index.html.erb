@@ -1,0 +1,864 @@
+<% content_for :javascript do %>
+  <script type='text/javascript'>
+    // This is necessary because ethernet and optical ID's can be shared. 
+    // but Vis.js requires the node id's to be unique, so I'm offsetting 
+    // all of the optical node id's by 100000. 
+    var OPTICAL_OFFSET_HACK = 10000;
+
+    var ETHERNET_LINK_OFFSET = 10000;
+
+    $('#ethernet-node-container').hide();
+    $('#optical-node-container').hide();
+    $('#optical-link-container').hide();
+    $('#optical-trail-container').hide();
+
+    // This will all be arrays
+    var ethernetNodes = <%= @ethernet_nodes.to_json.html_safe %>;
+    // ports might not be necessary
+    var ethernetPorts = <%= @ethernet_ports.to_json.html_safe %>;
+    var ethernetLinks = <%= @ethernet_links.to_json.html_safe %>;
+	
+	
+  	//optical section
+  	var opticalNodes = <%= @optical_nodes.to_json.html_safe %>;
+  	var opticalCards = <%= @optical_cards.to_json.html_safe %>;
+  	var opticalPorts = <%= @optical_ports.to_json.html_safe %>;
+    var opticalLinks = <%= @optical_links.to_json.html_safe %>;
+
+    var opticalCrossLayerLinks = <%= @optical_cross_layer_links.to_json.html_safe %>;
+
+    var opticalTrails = <%= @optical_trails.to_json.html_safe %>;
+    var opticalTrailHops = <%= @optical_trail_hops.to_json.html_safe %>;
+	
+
+
+    var mappedEthernetArray = ethernetNodes.map(function(item) {
+      return { id: item.node_id, label: item.node_name, group: 'ethernetGroup' };
+    });
+    var mappedEthernetLinks = ethernetLinks.map(function(item) {
+      return getEthernetNodesFromLink(item);
+    });
+
+    //optical stuff
+    var mappedOpticalLinks = opticalLinks.map(function(item) {
+      return getOpticalNodesFromLink(item);
+    });
+
+    var mappedOpticalArray = opticalNodes.map(function(item) {
+      return { id: item.node_id + OPTICAL_OFFSET_HACK, label: item.node_name, group: 'opticalGroup' };
+    });
+    var mappedOpticalCrossLayerLinks = opticalCrossLayerLinks.map(function(item) {
+      return getOpticalSourceEthernetDestNodesFromCrossLink(item);
+    });
+
+    var mappedEthernetCrossLayerLinks = opticalCrossLayerLinks.map(function(item) {
+      return getOpticalDestEthernetSourceNodesFromCrossLink(item);
+    });
+
+    var combinedNodes = mappedOpticalArray.concat(mappedEthernetArray);
+    var combinedEdges = mappedOpticalLinks.concat(mappedEthernetLinks);
+    combinedEdges = combinedEdges.concat(mappedOpticalCrossLayerLinks);
+    combinedEdges = combinedEdges.concat(mappedEthernetCrossLayerLinks);
+
+    //Optical
+    var visOpticalNodes = new vis.DataSet(mappedOpticalArray);
+    var visOpticalEdges = new vis.DataSet(mappedOpticalLinks);
+
+    var opticalData = {
+      nodes: visOpticalNodes,
+      edges: visOpticalEdges
+    };
+    //combined
+    var visCombinedNodes = new vis.DataSet(combinedNodes);
+    var visCombinedEdges = new vis.DataSet(combinedEdges);
+
+    var combinedData = {
+      nodes: visCombinedNodes,
+      edges: visCombinedEdges
+    };
+    //ethernet
+    var visEthernetNodes = new vis.DataSet(mappedEthernetArray);
+    var visEthernetEdges = new vis.DataSet(mappedEthernetLinks);
+
+    var ethernetData = {
+      nodes: visEthernetNodes,
+      edges: visEthernetEdges
+    };
+    //options
+    var options = {
+      physics: {
+        enabled: true
+      },
+      nodes: {
+        shape: 'dot',
+        size: 20,
+        font: {
+          size: 15,
+           // color: '#ffffff'
+          },
+        borderWidth: 2,
+        color: {
+          highlight: 'magenta'
+        }
+      },
+      edges: {
+        selectionWidth: 2.5
+      },
+      groups: {
+        //ethernetGroup: {color:'rgb(0,255,140)'},
+        ethernetGroup: {
+          shape: 'icon',
+          icon: {
+            face: 'FontAwesome',
+            code: '\uf108',
+            size: 50,
+            color: 'orange'
+          },
+          color: 'orange'
+        },
+        opticalGroup: {
+          shape: 'icon',
+          icon: {
+            face: 'FontAwesome',
+            code: '\uf0a0',
+            size: 50
+          },
+          color: {
+            border: 'blue',
+            background: 'blue',
+            highlight: {
+              border: 'red',
+              background: 'red'
+            }
+          }
+        }
+      }
+    };
+
+    
+    
+    TopologyViewEnum = {
+      MULTI_LAYER : 1,
+      OPTICAL_LAYER : 2,
+      ETHERNET_LAYER : 3
+    }
+    //var currentTopologyView = TopologyViewEnum.MULTI_LAYER;
+    
+
+
+    // create a network
+    var container = document.getElementById('visualization');
+
+    var globalNetwork;// = new vis.Network(container, combinedData, options);
+    multiLayerMain();
+    //console.log(currentTopologyView);
+
+    function multiLayerMain() {
+      var network = new vis.Network(container, combinedData, options);
+      showNodeContents(network);
+      globalNetwork = network;
+      currentTopologyView = TopologyViewEnum.MULTI_LAYER;
+    }
+    function opticalMain() {
+      var network = new vis.Network(container, opticalData, options);
+      showNodeContents(network);
+      globalNetwork = network;
+      currentTopologyView = TopologyViewEnum.OPTICAL_LAYER;
+    }
+    function ethernetMain() {
+      var network = new vis.Network(container, ethernetData, options);
+      showNodeContents(network);
+      globalNetwork = network;
+      currentTopologyView = TopologyViewEnum.ETHERNET_LAYER;
+    }
+    
+    function showNodeContents(network)
+    {
+      network.on("selectNode", function (params) {
+        var node;
+        console.log("Node Selected!");
+        if(params.nodes.length <= 0) {
+          return; // incorrect param
+        }
+
+        // lets look for ethernet and then optical
+        //debugger;
+        node = getEthernetNodeFromNodeId(params.nodes[0]);
+        if(!!node) {
+          // set ethernet
+          showEthernetNodeDetail(node);
+          return;
+        }
+
+        node = getOpticalNodeFromNodeId(params.nodes[0] - OPTICAL_OFFSET_HACK);
+        if(!!node) {
+          // set optical
+          showOpticalNodeDetail(node);
+          return;
+        }
+      });
+
+      network.on("selectEdge", function (params) {
+        var edge;
+        console.log("Edge Selected!");
+        if(params.edges.length <= 0 || params.nodes.length > 0) {
+          return; // incorrect param
+        }
+        
+        edge = getOpticalLinkFromLinkId(params.edges[0]);
+        if(!!edge) {
+           // set optical Link
+          showOpticalLinkDetail(edge);
+          showOpticalTrailDetail(edge);
+          return;
+        }
+      });
+    }
+
+    function getEthernetPortFromPortId(id) {
+      for(var i = 0; i < ethernetPorts.length; i++) {
+        if(ethernetPorts[i].port_id == id)
+          return ethernetPorts[i];
+      }
+
+      return undefined; // hopefully shouldn't happen
+    }
+
+    function getEthernetNodeFromNodeId(id) {
+      for(var i = 0; i < ethernetNodes.length; i++) {
+        if(ethernetNodes[i].node_id == id)
+          return ethernetNodes[i];
+      }
+
+      return undefined;
+    }
+
+
+    function getOpticalNodeFromNodeId(id) {
+      //console.log(id);
+      for(var i = 0; i < opticalNodes.length; i++) {
+        // console.log(opticalNodes[i].node_id);
+        // console.log(id);
+        if(opticalNodes[i].node_id == id)
+          return opticalNodes[i];
+      }
+
+      return undefined;
+    }
+
+    function getOpticalLinkFromLinkId(id) {
+      //console.log(id);
+      for(var i = 0; i < opticalLinks.length; i++) {
+//console.log(opticalLinks[i].link_id);
+        // console.log(id);
+        if(opticalLinks[i].link_id == id)
+          return opticalLinks[i];
+      }
+      //return opticalLinks[0];
+      //debugger;
+      return undefined;
+    }
+
+    function getTrailFromTrailId(id) {
+      for(var i = 0; i < opticalTrails.length; i++) {
+        if(opticalTrails[i].trail_id == id)
+          return opticalTrails[i];
+      }
+
+      return undefined;
+    }
+
+
+    function getEthernetNodesFromLink(link) {
+      // Port ids
+      var destinationPortId = link.des_port_id;
+      var sourcePortId = link.source_port_id;
+
+      // Port objects
+      var destPort = getEthernetPortFromPortId(destinationPortId);
+      var sourcePort = getEthernetPortFromPortId(sourcePortId);
+      // A vis edge. These ID's are what are in the nodes array.
+      // They are *not* the indicies inside the array
+      return { 
+        id: link.link_id + ETHERNET_LINK_OFFSET,
+        from: sourcePort.node_id, 
+        to: destPort.node_id, 
+        arrows: {
+          to: {
+            enabled: true,
+            scaleFactor: 1
+          }
+        },
+        color: {
+          color: 'orange',
+          highlight: 'red'
+        }
+      };
+    }
+
+    function getOpticalNodesFromLink(link) {
+      // Port ids
+      var destinationNodeId = link.des_node_id;
+      var sourceNodeId = link.source_node_id;
+
+      // Port objects
+      // var destNode = getOpticalNodeFromNodeId(destinationNodeId);
+      // var sourceNode = getOpticalNodeFromNodeId(sourceNodeId);
+      // A vis edge. These ID's are what are in the nodes array.
+      // They are *not* the indicies inside the array
+      return { 
+        id: link.link_id,
+        from: sourceNodeId + OPTICAL_OFFSET_HACK,
+        to: destinationNodeId + OPTICAL_OFFSET_HACK, 
+        arrows: {
+          to: {
+            enabled: true,
+            scaleFactor: 1
+          }
+        },
+        color: {
+          color: 'blue',
+          highlight: 'green'
+        }
+      };
+    }
+
+    function getOpticalSourceEthernetDestNodesFromCrossLink(link) {
+      // Port ids
+      var destinationPortId = link.l2_port_id;
+      var sourcePortId = link.l0_port;
+
+      // Port objects
+      var destPort = getEthernetPortFromPortId(destinationPortId);
+      var sourcePort = getOpticalPortFromPortId(sourcePortId);
+      // A vis edge. These ID's are what are in the nodes array.
+      // They are *not* the indicies inside the array
+      return { 
+        id: link.crosslayer_link_id,
+        from: sourcePort.node_id + OPTICAL_OFFSET_HACK,
+        to: destPort.node_id,
+        arrows: {
+          to: {
+            enabled: true,
+            scaleFactor: 1
+          }
+        },
+        color: {
+          color: 'blue',
+          highlight: 'green'
+        }
+      };
+    }
+
+    function getOpticalDestEthernetSourceNodesFromCrossLink(link) {
+      // Port ids
+      var destinationPortId = link.l0_port;
+      var sourcePortId = link.l2_port_id;
+
+      // Port objects
+      var destPort = getOpticalPortFromPortId(destinationPortId);
+      var sourcePort = getEthernetPortFromPortId(sourcePortId);
+      // A vis edge. These ID's are what are in the nodes array.
+      // They are *not* the indicies inside the array
+      return { 
+        id: link.crosslayer_link_id *-1, //THIS IS A TEMPORARY FIX TO AVOID DUPLICATES
+        from: sourcePort.node_id,
+        to: destPort.node_id + OPTICAL_OFFSET_HACK,
+        arrows: {
+          to: {
+            enabled: true,
+            scaleFactor: 1
+          }
+        },
+        color: {
+          color: 'orange',
+          highlight: 'red'
+        }
+      };
+    }
+
+    
+
+    function showEthernetNodeDetail(ethernetNode) {
+      $('#optical-node-container').hide();
+      $('#optical-link-container').hide();
+      $('#optical-trail-container').hide();
+
+      $('#ethernet-title').text(ethernetNode.node_name);
+      $('#ethernet-id').text(ethernetNode.node_id);
+      $('#ethernet-dpid').text(ethernetNode.node_dpid);
+      $('#ethernet-type').text(ethernetNode.node_type);
+      $('#ethernet-segment').text(ethernetNode.node_segment);
+      $('#ethernet-controller').text(ethernetNode.node_controller);
+
+      $('#ethernet-node-container').fadeIn();
+    }
+
+    function showOpticalNodeDetail(opticalNode) {
+      $('#ethernet-node-container').hide();
+      $('#optical-link-container').hide();
+      $('#optical-trail-container').hide();
+
+      $('#optical-title').text(opticalNode.node_name);
+      $('#optical-node-id').text(opticalNode.node_id);
+      $('#optical-node-idname').text(opticalNode.node_idname);
+      $('#optical-ip').text(opticalNode.node_ip);
+      $('#optical-type').text(opticalNode.node_type);
+      $('#optical-version').text(opticalNode.node_version);
+      $('#optical-controller').text(opticalNode.node_controller);
+
+      $('#optical-node-container').fadeIn();
+    }
+
+    function showOpticalLinkDetail(opticalLink) {
+      $('#ethernet-node-container').hide();
+      $('#optical-node-container').hide();
+      $('#optical-link-container').hide();
+
+      $('#optical-link-title').text(opticalLink.link_idname);
+      $('#optical-link-id').text(opticalLink.link_id);
+      $('#optical-source-node-id').text(opticalLink.source_node_id);
+      $('#optical-source-chassis-id').text(opticalLink.source_chassis_id);
+      $('#optical-source-slot-id').text(opticalLink.source_slot_id);
+      $('#optical-source-port-id').text(opticalLink.source_port_id);
+      $('#optical-des-node-id').text(opticalLink.des_node_id);
+      $('#optical-des-chassis-id').text(opticalLink.des_chassis_id);
+      $('#optical-des-slot-id').text(opticalLink.des_slot_id);
+      $('#optical-des-port-id').text(opticalLink.des_port_id);
+      $('#optical-link-type').text(opticalLink.link_type);
+      $('#optical-distance').text(opticalLink.distance);
+      $('#optical-loss').text(opticalLink.loss);
+      $('#optical-fiber-type').text(opticalLink.fiber_type);
+      $('#optical-capacity').text(opticalLink.capacity);
+
+      $('#optical-link-container').fadeIn();
+    }
+
+    function showOpticalTrailDetail(opticalLink) {
+      $('#ethernet-node-container').hide();
+      $('#optical-node-container').hide();
+      $('#optical-trail-container').hide();
+      //
+      
+      hops = getTrailHopsFromLink(opticalLink);
+      console.log("Hops: ");
+      console.log(hops);
+      trails = getTrailsFromHops(hops);
+      console.log("Trails: ");
+      console.log(trails);
+
+
+      var replacement = "";
+      trails.forEach(
+        function(trail) 
+        {
+          replacement +=
+          "<a href=\"javascript:void(0)\;\" class=\"btn btn-primary\" onclick=\"highlightTrail("+trail.trail_id+")\;\">Show Trail</a><br>"+
+          "<b>Source Node: </b><span id=\"optical-trail-source"+trails.indexOf(trail).toString()+"\"></span><br>"+
+          "<b>Des Node: </b><span id=\"optical-trail-des"+trails.indexOf(trail).toString()+"\"></span><br>";
+        }
+      );
+      //console.log(replacement);
+      document.getElementById("optical-trail-container").innerHTML = replacement;
+
+      //getTrailsFromHops
+      //opticalTrail
+
+      //hops = getTrailHopsFromTrail(opticalTrail);
+      trails.forEach(
+        function(trail) 
+        {
+          $('#optical-trail-source'+trails.indexOf(trail).toString())
+          .text(getOpticalNodeFromNodeId(trail.source_node_id).node_idname);
+          $('#optical-trail-des'+trails.indexOf(trail).toString())
+          .text(getOpticalNodeFromNodeId(trail.des_node_id).node_idname);
+        }
+      );
+      
+      $('#optical-trail-container').fadeIn();
+    }
+
+    function highlightTrail(trailId)
+    {
+      localTrail = getTrailFromTrailId(trailId)
+      console.log(localTrail.trail_name);
+      localHops = getTrailHopsFromTrail(localTrail);
+      localLinkIds = getLinksFromHops(localHops);
+
+      localNodeIds = new Set();
+      localEdgeIds = new Set();
+
+      console.log("Links to Select: ");
+      console.log(localLinkIds);
+
+      localLinkIds.forEach(
+        function(linkId)
+        {
+          link = getOpticalLinkFromLinkId(linkId);
+          localNodeIds.add(link.source_node_id + OPTICAL_OFFSET_HACK);
+          localNodeIds.add(link.des_node_id + OPTICAL_OFFSET_HACK);
+          localEdgeIds.add(link.link_id);
+        }
+      );
+      console.log("Selected Nodes: ");
+      console.log(localNodeIds);
+      console.log("Selected Edges: ");
+      console.log(localEdgeIds);
+
+      globalNetwork.setSelection(
+        {
+          nodes: Array.from(localNodeIds),
+          edges: Array.from(localEdgeIds)
+        },
+        {
+          unselectAll: true,
+          highlightEdges: false
+        }
+      );
+    }
+
+    function getLinksFromHops(hops)
+    {
+      linksToReturn = [];
+      hops.forEach(
+        function(element) 
+        {
+          linksToReturn.push(element.link_id);
+        }
+      );
+      return linksToReturn;
+    }
+
+    function getTrailHopsFromTrail(opticalTrail)
+    {
+      associated_hops = [];
+      opticalTrailHops.forEach(
+        function(element) 
+        {
+          if(element.trail_id == opticalTrail.trail_id)
+          {
+            associated_hops.push(element);
+          }
+        }
+      );
+      return associated_hops;
+    }
+
+    function getTrailHopsFromLink(opticalLink)
+    {
+      associated_hops = [];
+      opticalTrailHops.forEach(
+        function(element) 
+        {
+          if(element.link_id == opticalLink.link_id)
+          {
+            associated_hops.push(element);
+          }
+        }
+      );
+      return associated_hops;
+    }
+
+    // can probably easily replace all of these with getTrailFromTrailId(<hop>.trail_id);
+    function getTrailFromHop(opticalTrailHop)
+    {
+      trail_id = opticalTrailHop.trail_id
+      //console.log(trail_id);
+      parentTrail = null;
+      opticalTrails.forEach(
+        function(element) 
+        {
+          if(element.trail_id == trail_id)
+          {
+            parentTrail = element;
+          }
+        }
+      );
+      return parentTrail;
+    }
+
+    function getTrailsFromHops(opticalTrailHops)
+    {
+      associated_trails = [];
+      opticalTrailHops.forEach(
+        function(element) 
+        {
+          associated_trails.push(getTrailFromHop(element));
+        }
+      );
+      localSet = new Set(associated_trails);
+      associated_trails = Array.from(localSet);
+      return associated_trails;
+    }
+
+
+    function loadNetwork(iterations) 
+    {
+      
+      var inputValue;
+      if(currentTopologyView == TopologyViewEnum.MULTI_LAYER)
+        inputValue = localStorage.getItem("MultiLayer Save");
+      else if(currentTopologyView == TopologyViewEnum.OPTICAL_LAYER)
+        inputValue = localStorage.getItem("OpticalLayer Save");
+      else if(currentTopologyView == TopologyViewEnum.ETHERNET_LAYER)
+        inputValue = localStorage.getItem("EthernetLayer Save");
+      else
+        console.log("ERROR>> currentTopologyView is using unaccounted for Enum in loadNetwork.");
+      var inputData = JSON.parse(inputValue);
+      //debugger;
+      console.log(inputData);
+      getNodeData(inputData);
+      globalNetwork.storePositions();
+      //getEdgeData(inputData);
+      // var data = {
+      //   nodes: getNodeData(inputData),
+      //   edges: getEdgeData(inputData)
+      // }
+
+      //network = new vis.Network(container, data, {});
+      //resizeExportArea();
+    }
+
+    function saveNetwork() 
+    {
+      clearOutputArea();
+
+      //var obj2 = network.getPositions();
+      globalNetwork.storePositions();
+      
+      var obj1 = {};
+      if(currentTopologyView == TopologyViewEnum.MULTI_LAYER)
+        obj1 = visCombinedNodes.get();
+      else if(currentTopologyView == TopologyViewEnum.OPTICAL_LAYER)
+        obj1 = visOpticalNodes.get();
+      else if(currentTopologyView == TopologyViewEnum.ETHERNET_LAYER)
+        obj1 = visEthernetNodes.get();
+      else
+        console.log("ERROR>> currentTopologyView is using unaccounted for Enum in saveNetwork.");
+      
+      
+      localIds = [];
+      for(var key in obj1) localIds[key] = obj1[key].id;
+      var obj2 = globalNetwork.getPositions(localIds);
+      
+      var nodes = {};
+      for(var key in obj1) nodes[key] = obj1[key];
+      //for(var key in obj2) nodes[key] = obj2[key];
+      
+
+      for(var key in nodes)
+      {
+        var nodeid = nodes[key].id
+        nodes[key].x = obj2[nodeid].x;
+        nodes[key].y = obj2[nodeid].y;
+      }
+      nodes = objectToArray(nodes);
+
+      console.log(nodes);
+      nodes = objectToArray(nodes);
+      //nodes.forEach(addContextualInformation);
+      // nodes = visOpticalNodes.get({
+      // fields: ['id', 'group','label','x','y']});
+      //debugger;
+      
+      // pretty print node data
+      console.log(obj1);
+      console.log(obj2);
+      
+      var exportValue = JSON.stringify(nodes, undefined, 2);
+
+      
+      if(currentTopologyView == TopologyViewEnum.MULTI_LAYER)
+        localStorage.setItem("MultiLayer Save",exportValue);
+      else if(currentTopologyView == TopologyViewEnum.OPTICAL_LAYER)
+        localStorage.setItem("OpticalLayer Save",exportValue);
+      else if(currentTopologyView == TopologyViewEnum.ETHERNET_LAYER)
+        localStorage.setItem("EthernetLayer Save",exportValue);
+      else
+        console.log("ERROR>> currentTopologyView is using unaccounted for Enum in saveNetwork.");
+      
+      //resizeExportArea();
+    }
+
+    function objectToArray(obj) {
+      return Object.keys(obj).map(function (key) { return obj[key]; });
+    }
+    function clearOutputArea() 
+    {
+      localStorage.setItem("save","");
+    }
+
+    function addContextualInformation(elem, index, array) {
+      //addId(elem, index);
+      addConnections(elem, index);
+    }
+    function addId(elem, index) {
+      elem.id = index;
+    }
+
+    function addConnections(elem, index) {
+        // need to replace this with a tree of the network, then get child direct children of the element
+        elem.connections = network.getConnectedNodes(index);
+    }
+
+    function getNodeData(data) {
+      var networkNodes = [];
+      data.forEach(function(elem, index, array) {
+        // var dataSetToUse;
+        // if(currentTopologyView == TopologyViewEnum.MULTI_LAYER)
+        //   dataSetToUse = visCombinedNodes;
+        // else if(currentTopologyView == TopologyViewEnum.OPTICAL_LAYER)
+        //   dataSetToUse = visOpticalNodes;
+        // else if(currentTopologyView == TopologyViewEnum.ETHERNET_LAYER)
+        //   dataSetToUse = visEthernetNodes;
+        // else
+        //   console.log("ERROR>> currentTopologyView is using unaccounted for Enum in getNodeData.");
+        // dataSetToUse.update([{id: elem.id, x: elem.x, y: elem.y}]);
+        globalNetwork.moveNode(elem.id, elem.x, elem.y);
+      });
+    }
+
+    function getEdgeData(data) {
+      var networkEdges = [];
+
+      data.forEach(function(node, index, array) {
+      // add the connection
+        node.connections.forEach(function(connId, cIndex, conns) {
+
+        networkEdges.push({from: node.id, to: connId});
+        
+        var elementConnections = array[connId].connections;
+        // remove the connection from the other node to prevent duplicate connections
+        var duplicateIndex = elementConnections.findIndex(function(connection) {
+            connection === node.id;
+        });
+
+        elementConnections = elementConnections.splice(0, duplicateIndex - 1).concat(elementConnections.splice(duplicateIndex + 1, elementConnections.length))
+        });
+      });
+      return new vis.DataSet(networkEdges);
+    }
+    // function highlightTrail(opticalTrail)
+    // {
+    //   console.log(opticalTrail);
+    // }
+
+
+    showNodeContents(globalNetwork);
+
+
+    // network.on("selectEdge", function(params) {
+    //   // debugger;
+
+    //   if(params.nodes.length > 0) {
+    //     return; // we really meant to select a node
+    //   }
+    // });
+
+    // network.on("deselectNode", function (params) {
+    //   debugger;
+    //     console.log('deselectNode Event:', params);
+    // });
+
+    // network.on("deselectEdge", function (params) {
+    //   debugger;
+    //     console.log('deselectEdge Event:', params);
+    // });
+
+
+  </script>
+<% end %>
+
+<div class="col-md-12">
+  <h1>Topology</h1>
+
+  <div class="col-md-4">
+    <h2>Sidebar</h2>
+
+    <div class="well">
+      <%= link_to "Multi Layer", nil, onclick: "multiLayerMain()", remote: true, class: 'btn btn-primary' %>
+      <%= link_to "Optical", nil, onclick: "opticalMain()", remote: true, class: 'btn btn-primary' %>
+      <%= link_to "Ethernet", nil, onclick: "ethernetMain()", remote: true, class: 'btn btn-primary' %>
+      <br><br>
+      <%= link_to "Load", nil, onclick: "loadNetwork()", remote: true, class: 'btn btn-primary' %>
+      <%= link_to "Save", nil, onclick: "saveNetwork()", remote: true, class: 'btn btn-primary' %>
+    </div>
+
+    <div id="ethernet-node-container" class="well">
+      <h3>Ethernet Node: <span id="ethernet-title">Temporary Ethernet Title</span></h3>
+
+      <b>Node ID: </b><span id="ethernet-id"></span><br>
+      <b>DPID: </b><span id="ethernet-dpid"></span><br>
+      <b>Type: </b><span id="ethernet-type"></span><br>
+      <b>Segment: </b><span id="ethernet-segment"></span><br>
+      <b>Controller: </b><span id="ethernet-controller"></span><br>
+    </div>
+
+    <div id="optical-node-container" class="well">
+      <h3>Optical Node: <span id="optical-title">Temporary Optical Title</span></h3>
+
+      <b>Node ID: </b><span id="optical-node-id"></span><br>
+      <b>Node ID Name: </b><span id="optical-node-idname"></span><br>
+      <b>IP: </b><span id="optical-ip"></span><br>
+      <b>Type: </b><span id="optical-type"></span><br>
+      <b>Version: </b><span id="optical-version"></span><br>
+      <b>Controller: </b><span id="optical-controller"></span><br>
+    </div>
+
+    <div id="optical-link-container" class="well">
+      <h3 >Optical Link: <span id="optical-link-title">Temporary Optical Title</span></h3>
+
+      <b>Link ID: </b><span id="optical-link-id"></span><br>
+      <b>Source Node ID: </b><span id="optical-source-node-id"></span><br>
+      <b>Source Chassis ID: </b><span id="optical-source-chassis-id"></span><br>
+      <b>Source Slot ID: </b><span id="optical-source-slot-id"></span><br>
+      <b>Source Port ID: </b><span id="optical-source-port-id"></span><br>
+      <b>Destination Node ID: </b><span id="optical-des-node-id"></span><br>
+      <b>Destination Chassis ID: </b><span id="optical-des-chassis-id"></span><br>
+      <b>Destination Slot ID: </b><span id="optical-des-slot-id"></span><br>
+      <b>Destination Port ID: </b><span id="optical-des-port-id"></span><br>
+      <b>Link Type: </b><span id="optical-link-type"></span><br>
+      <b>Distance: </b><span id="optical-distance"></span><br>
+      <b>Loss: </b><span id="optical-loss"></span><br>
+      <b>Fiber Type: </b><span id="optical-fiber-type"></span><br>
+      <b>Capacity: </b><span id="optical-capacity"></span><br>
+
+    </div>
+
+    <div id="optical-trail-container" class="well">
+      <!--<h3 id="optical-trail-title">Temporary Optical Title</h3>
+
+      <b>Link ID: </b><span id="optical-link-id"></span><br> -->
+
+      
+      <!--<b>Source Chassis ID: </b><span id="optical-source-chassis-id"></span><br>
+      <b>Source Slot ID: </b><span id="optical-source-slot-id"></span><br>
+      <b>Source Port ID: </b><span id="optical-source-port-id"></span><br>
+      <b>Destination Node ID: </b><span id="optical-des-node-id"></span><br>
+      <b>Destination Chassis ID: </b><span id="optical-des-chassis-id"></span><br>
+      <b>Destination Slot ID: </b><span id="optical-des-slot-id"></span><br>
+      <b>Destination Port ID: </b><span id="optical-des-port-id"></span><br>
+      <b>Link Type: </b><span id="optical-link-type"></span><br>
+      <b>Distance: </b><span id="optical-distance"></span><br>
+      <b>Loss: </b><span id="optical-loss"></span><br>
+      <b>Fiber Type: </b><span id="optical-fiber-type"></span><br>
+      <b>Capacity: </b><span id="optical-capacity"></span><br>
+-->
+    </div>
+    <div id="config" >
+        
+    </div>
+
+  </div>
+  <div class="col-md-8">
+    <div class="well">
+      <div id="visualization">
+        <i class="fa fa-cog fa-spin fa-5x" aria-hidden="true"></i>
+      </div>
+    </div>
+  </div>
+  <!-- <div class="col-md-8">
+    <div class="well"> -->
+    <!-- </div>
+  </div>-->
+</div>

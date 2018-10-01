@@ -1,0 +1,31 @@
+<div class="col-md-12">
+  <h1>Flows: <%= @flow.title %></h1>
+
+  <table class="table table-bordered">                         
+    <tr>
+      <th>User Email</th>
+      <th>Source</th>
+  	  <th>Destination</th>
+      <th>Status</th>
+    	<th>Start Time</th>
+      <th>End Time</th>
+      <th>Minimum Bandwidth</th>
+      <th>Bandwidth Units</th>
+  	<th>Maximum Latency</th>
+    </tr>    
+    <tr> 
+      <td><%= @flow.user.email %></td>
+      <td><%= @flow.src %></td> 
+  	  <td><%= @flow.dst %></td>
+  	  <td><%= @flow.english_status %></td>
+  	  <td><%= @flow.start_time %></td>
+      <td><%= @flow.end_time %></td>
+  	  <td><%= @flow.min_bandwidth %></td>
+      <td><%= @flow.bandwidth_unit %></td>
+  	  <td><%= @flow.latency %></td>
+    </tr>                 
+  </table>
+
+  <%= link_to "Edit", edit_flow_path(@flow), class: 'btn btn-warning btn-lg' %><br><br>
+  <%= link_to "Delete", @flow, method: :delete, data: { confirm: "You sure?" }, class: 'btn btn-danger btn-lg' %>
+</div>

@@ -1,0 +1,92 @@
+<h1>Create New Alarm</h1>
+
+<%= form_for @alarm do |f| %>
+  <p>
+    <%= f.label :node_id %><br>
+    <%= f.number_field :node_id %>
+  </p>
+ 
+  <p>
+    <%= f.label :aid %><br>
+    <%= f.text_field :aid %>
+  </p>
+
+  <p>
+    <%= f.label :mod2 %><br>
+    <%= f.text_field :mod2 %>
+  </p>
+
+  <p>
+    <%= f.label :alarm_name %><br>
+    <%= f.text_field :alarm_name %>
+  </p>
+
+  <p>
+    <%= f.label :start_date %><br>
+    <%= f.text_field :start_date %>
+  </p>
+
+  <p>
+    <%= f.label :start_time %><br>
+    <%= f.text_field :start_time %>
+  </p>
+
+  <p>
+    <%= f.label :chassis_id %><br>
+    <%= f.number_field :chassis_id %>
+  </p>
+
+  <p>
+    <%= f.label :slot_id %><br>
+    <%= f.number_field :slot_id %>
+  </p>
+
+  <p>
+    <%= f.label :port_id %><br>
+    <%= f.text_field :port_id %>
+  </p>
+
+  <p>
+    <%= f.label :severity %><br>
+    <%= f.text_field :severity %>
+  </p>
+
+  <p>
+    <%= f.label :severice_affect %><br>
+    <%= f.text_field :severice_affect %>
+  </p>
+
+  <p>
+    <%= f.label :direction %><br>
+    <%= f.text_field :direction %>
+  </p>
+  
+  <p>
+    <%= f.label :location %><br>
+    <%= f.text_field :location %>
+  </p>
+
+  <p>
+    <%= f.label :description %><br>
+    <%= f.text_field :description %>
+  </p>
+
+  <p>
+    <%= f.label :aid_detail %><br>
+    <%= f.text_field :aid_detail %>
+  </p>
+
+  <p>
+    <%= f.label :end_date %><br>
+    <%= f.text_field :end_date %>
+  </p>
+
+  <p>
+    <%= f.label :end_time %><br>
+    <%= f.text_field :end_time %>
+  </p>
+ 
+  <p>
+    <%= f.submit %>
+  </p>
+<% end %>

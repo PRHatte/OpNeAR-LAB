@@ -1,0 +1,80 @@
+ <%= form_for flow do |f| %>
+    <%= form_errors_for flow %>
+
+    <div class="form-inline">
+      <%= f.label :title, class: "col-2 col-form-label"%>:
+      <%= f.text_field :title, class: "form-control" %>      
+    </div>
+    
+    <br/>
+
+    <div class="form-inline">
+      <%= f.label :src, class: "col-2 col-form-label"%>:
+      <%= f.collection_select :src, @hosts, :id, :host_name, {}, class: "form-control" %>
+    </div>
+
+    <br/>
+
+    <div class="form-inline">
+      <%= f.label :dst, class: "col-2 col-form-label" %>:
+      <%= f.text_field :dst, class: "form-control" %>
+    </div>
+
+    <br/>
+
+    <div class="form-inline">
+    <%= f.label :method %>:
+    <%= f.collection_select :method, Flow::METHOD, :to_s, :to_s, 
+       {:include_blank => true}, {class: "form-control"}
+     %>
+    </div>
+
+    <br />
+
+    <div class="form-inline">
+    <%= f.label :start_time %>:
+    <%= f.datetime_field :start_time, class: "form-control" %>
+    </div>
+
+    <br />
+
+    <div class="form-inline">
+    <%= f.label :end_time %>:
+    <%= f.datetime_field :end_time, class: "form-control" %>
+    </div>
+
+    <br />
+
+    <div class="form-inline">
+    <%= f.label :min_bandwidth %>:
+    <%= f.text_field :min_bandwidth, class: "form-control" %>
+    </div>
+
+    <br />
+
+    <div class="form-inline">
+    <%= f.label :min_bandwidth %>:
+    <%= f.text_field :max_bandwidth, class: "form-control" %>
+    </div>
+
+    <br />
+
+    <div class="form-inline">
+    <%= f.label :bandwidth_unit %>:
+     <%= f.collection_select :bandwidth_unit, Flow::BANDWIDTH_UNITS, :to_s, :to_s, 
+       { include_blank: true}, { class: "form-control" }
+     %>
+    </div>
+
+     <br />
+
+    <div class="form-inline">
+    <%= f.label :latency %>:
+    <%= f.text_field :latency, class: "form-control" %>
+    </div>
+
+    <br />
+    
+
+  <%= f.submit "Submit", class: "btn btn-primary"%>
+<% end %> 

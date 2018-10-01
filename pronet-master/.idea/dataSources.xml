@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="Rails pronet-master: test" uuid="e9ea0842-0a77-45bf-966a-48c29249fb6f">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <imported>true</imported>
+      <remarks>$PROJECT_DIR$/config/database.yml</remarks>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://&lt;%= ENV['DATABASE_HOST'] || &quot;db&quot; %&gt;/pronet_test</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="Rails pronet-master: development" uuid="06fcb3a3-94f5-4022-8818-c4bf2f0fa90d">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <imported>true</imported>
+      <remarks>$PROJECT_DIR$/config/database.yml</remarks>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://&lt;%= ENV['DATABASE_HOST'] || &quot;db&quot; %&gt;/pronet_development</jdbc-url>
+    </data-source>
+  </component>
+</project>

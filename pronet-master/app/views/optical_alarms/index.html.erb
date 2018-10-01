@@ -1,0 +1,145 @@
+<div class="col-md-12">
+  <h1>All Alarms</h1>
+
+  <% content_for :javascript do %>
+    <script type='text/javascript'>
+      $('#alarm-container').hide();
+
+      var addedAlarms = <%= @added_alarms.to_json.html_safe %>;
+
+      function onAlarmClick(id) {
+        var alarm;
+
+        for(var i = 0; i < addedAlarms.length; i++) {
+          if(addedAlarms[i].node_autoid == id) {
+            alarm = addedAlarms[i];
+            break;
+          }
+        }
+
+        if(!!alarm) {
+          $('#alarm-title').text(alarm.alarm_name);
+          $('#alarm-description').text(alarm.description);
+          $('#alarm-severity').text(alarm.severity);
+          $('#alarm-aid').text(alarm.aid);
+          $('#alarm-mod').text(alarm.mod);
+          $('#alarm-start-date').text(alarm.start_date);
+          $('#alarm-start-time').text(alarm.start_time);
+          $('#alarm-chassis-id').text(alarm.chassis_id);
+          $('#alarm-slot-id').text(alarm.slot_id);
+          $('#alarm-port-id').text(alarm.port_id);
+          $('#alarm-node-id').text(alarm.node_id);
+          $('#alarm-severice-affect').text(alarm.severice_affect);
+          $('#alarm-direction').text(alarm.direction);
+          $('#alarm-location').text(alarm.location);
+          $('#alarm-aid-detail').text(alarm.aid_detail);
+          $('#alarm-end-date').text(alarm.end_date);
+          $('#alarm-end-time').text(alarm.end_time);
+
+
+          $('#alarm-container').fadeIn();
+        } else {
+          console.log("I was not able to find an alarm for the id of " + id);
+          $('#alarm-container').fadeOut();
+        }
+      }
+
+      console.log("I'm getting loaded");
+    </script>
+  <% end %>
+
+  <div class="col-md-10">
+    <h2>Ongoing</h2>
+    <table class="table table-bordered table-striped">
+      <thead>
+        <th>Alarm Name</th>
+        <th>Severity</th>
+        <th>Start Date</th>
+        <th>AID</th>
+        <th>Chassis ID</th>
+        <th>Slot ID</th>
+        <th>Port ID</th>
+        <th>Severice Affect</th>
+        <th>Description</th>
+        <th>Direction</th>
+        <th>Location</th>
+      </thead>
+      <tbody>
+        <% @ongoing_alarms.each do |alarm| %>
+          <tr class="<%= alarm.color_for_severity %>">
+            <td><%= link_to alarm.alarm_name, alarm, onclick: "onAlarmClick(#{alarm.node_autoid})", remote: true %></td>
+            <td><%= alarm.english_severity %></td>
+            <td><%= alarm.start_date %></td>
+            <td><%= alarm.aid %></td>
+            <td><%= alarm.chassis_id %></td>
+            <td><%= alarm.slot_id %></td>
+            <td><%= alarm.port_id %></td>
+            <td><%= alarm.english_severice_affect %></td>
+            <td><%= alarm.description %></td>
+            <td><%= alarm.english_direction %></td>
+            <td><%= alarm.english_location %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <h2>Past Alarms</h2>
+    <table class="table table-bordered table-striped">
+      <thead>
+        <th>Alarm Name</th>
+        <th>Severity</th>
+        <th>Start Date</th>
+        <th>AID</th>
+        <th>Chassis ID</th>
+        <th>Slot ID</th>
+        <th>Port ID</th>
+        <th>Severice Affect</th>
+        <th>Description</th>
+        <th>Direction</th>
+        <th>Location</th>
+      </thead>
+      <tbody>
+        <% @old_alarms.each do |alarm| %>
+          <tr class="<%= alarm.color_for_severity %>">
+            <td><%= link_to alarm.alarm_name, alarm, onclick: "onAlarmClick(#{alarm.node_autoid})", remote: true %></td>
+            <td><%= alarm.severity %> </td>
+            <td><%= alarm.start_date %></td>
+            <td><%= alarm.aid %></td>
+            <td><%= alarm.chassis_id %></td>
+            <td><%= alarm.slot_id %></td>
+            <td><%= alarm.port_id %></td>
+            <td><%= alarm.severice_affect %></td>
+            <td><%= alarm.description %></td>
+            <td><%= alarm.direction %></td>
+            <td><%= alarm.location %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-md-2">
+    <div id="alarm-container" class="well">
+      <h2 id="alarm-title"></h2>
+      <p id="alarm-description" class="lead">
+        Fill this content in!
+      </p>
+      <b>Severity: </b><span id="alarm-severity"></span><br>
+      <b>AID: </b><span id="alarm-aid"></span><br>
+      <b>Mod2: </b><span id="alarm-mod"></span><br>
+      <b>Start Date: </b><span id="alarm-start-date"></span><br>
+      <b>Start Time: </b><span id="alarm-start-time"></span><br>
+      <b>Chassis ID: </b><span id="alarm-chassis-id"></span><br>
+      <b>Slot ID: </b><span id="alarm-slot-id"></span><br>
+      <b>Port ID: </b><span id="alarm-port-id"></span><br>
+      <b>Node ID: </b><span id="alarm-node-id"></span><br>
+      <b>Severice Affect: </b><span id="alarm-severice-affect"></span><br>
+      <b>Direction: </b><span id="alarm-direction"></span><br>
+      <b>Location: </b><span id="alarm-location"></span><br>
+      <b>AID Detail: </b><span id="alarm-aid-detail"></span><br>
+      <b>End Date: </b><span id="alarm-end-date"></span><br>
+      <b>End Time: </b><span id="alarm-end-time"></span>
+    </div>
+  </div>
+
+  <!-- Create pagination -->
+</div>

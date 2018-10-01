@@ -1,0 +1,133 @@
+<div class="col-md-12">
+  <h1>Dashboard</h1>
+
+  <% if is_admin? && @user != current_user %>
+    <div class="well">
+      <h2>Edit User</h2>
+      <%= form_tag user_path(@user), method: :patch do %>
+          <h4><%= @user.email %></h4>
+          <b>Permission Level: </b><%= collection_select(:user, :permission_level, User::PERMISSION_LEVELS, :to_s, :to_s, selected: @user.permission_level) %>
+          <%= submit_tag "Update", class: 'btn btn-warning' %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%= link_to "Request Flow", new_flow_path, class: 'btn btn-primary btn-lg' %>
+  <h2>Scheduled Flows</h2>
+  <table class="table table-bordered table-striped table-hover">
+    <tr>                          
+      <th>Title</th>
+      <th>User Email</th>
+      <th>Source</th>
+      <th>Destination</th>
+      <th>Status</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th>Minimum Bandwidth</th>
+      <th>Bandwidth Units</th>
+      <th>Maximum Latency</th>
+      <th></th>
+      <th></th>
+    </tr>
+    <% @scheduled_flows.each do |flow| %>      
+      <tr>
+        <td><%= link_to flow.title, flow%></td>  
+        <td><%= flow.user.email %></td>
+        <td><%= flow.src %></td> 
+        <td><%= flow.dst %></td>
+        <td><%= flow.english_status %></td>
+        <td><%= flow.start_time %></td>
+        <td><%= flow.end_time %></td>
+        <td><%= flow.min_bandwidth %></td>
+        <td><%= flow.bandwidth_unit %></td>
+        <td><%= flow.latency %></td>
+        <td><%= link_to "Edit", edit_flow_path(flow) %></td>
+        <td><%= link_to "Delete", flow, method: :delete, data: { confirm: "You sure?" } %></td>
+      </tr>
+    <% end %>  
+  </table>
+
+  <h2>Unapproved Flows</h2>
+  <table class="table table-bordered table-striped table-hover">
+    <tr>                          
+      <th>Title</th>
+      <th>User Email</th>
+      <th>Source</th>
+      <th>Destination</th>
+      <th>Status</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th>Minimum Bandwidth</th>
+      <th>Bandwidth Units</th>
+      <th>Maximum Latency</th>
+      <th></th>
+      <th></th>
+    </tr>
+    <% @flows.each do |flow| %>      
+      <tr>
+        <td><%= link_to flow.title, flow%></td>  
+        <td><%= flow.user.email %></td>
+        <td><%= flow.src %></td> 
+        <td><%= flow.dst %></td>
+        <td><%= flow.english_status %></td>
+        <td><%= flow.start_time %></td>
+        <td><%= flow.end_time %></td>
+        <td><%= flow.min_bandwidth %></td>
+        <td><%= flow.bandwidth_unit %></td>
+        <td><%= flow.latency %></td>
+        <td><%= link_to "Edit", edit_flow_path(flow) %></td>
+        <td><%= link_to "Delete", flow, method: :delete, data: { confirm: "You sure?" } %></td>
+      </tr>
+    <% end %>  
+  </table>
+
+  <h2>Denied Flows</h2>
+  <table class="table table-bordered table-striped table-hover">
+    <tr>                          
+      <th>Title</th>
+      <th>User Email</th>
+      <th>Source</th>
+      <th>Destination</th>
+      <th>Status</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th>Minimum Bandwidth</th>
+      <th>Bandwidth Units</th>
+      <th>Maximum Latency</th>
+      <th></th>
+      <th></th>
+    </tr>
+    <% @denied_flows.each do |flow| %>      
+      <tr>
+        <td><%= link_to flow.title, flow%></td>  
+        <td><%= flow.user.email %></td>
+        <td><%= flow.src %></td> 
+        <td><%= flow.dst %></td>
+        <td><%= flow.english_status %></td>
+        <td><%= flow.start_time %></td>
+        <td><%= flow.end_time %></td>
+        <td><%= flow.min_bandwidth %></td>
+        <td><%= flow.bandwidth_unit %></td>
+        <td><%= flow.latency %></td>
+        <td><%= link_to "Edit", edit_flow_path(flow) %></td>
+        <td><%= link_to "Delete", flow, method: :delete, data: { confirm: "You sure?" } %></td>
+      </tr>
+    <% end %>  
+  </table>
+
+  <%= link_to "Request Flow", new_flow_path, class: 'btn btn-primary btn-lg' %>
+</div>
+
+<div class="col-md-12">
+  <h2>Authorized Hosts</h2>
+  <table class="table table-bordered table-striped table-hover">
+    <thead>
+      <th>Host Name</th>
+    </thead>
+    <tbody>
+      <% @hosts.each do |host| %>
+        <td><%= host.host_name %></td>
+      <% end %>
+    </tbody>
+  </table>
+</div>

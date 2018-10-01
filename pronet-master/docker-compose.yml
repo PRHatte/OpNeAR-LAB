@@ -1,0 +1,23 @@
+version: '2.1'
+services:
+  redis:
+    image: redis
+  db:
+    image: postgres
+  web:
+    build: .
+    command: /docker/start-rails.sh
+    volumes:
+      - .:/pronet
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+  sidekiq:
+    build: .
+    command: bundle exec sidekiq
+    volumes:
+      - .:/pronet
+    depends_on:
+      - web
+      - db

@@ -1,0 +1,42 @@
+<div class="col-md-12">
+  <h1>Admin Users</h1>
+  <p class="lead">
+    Modify and permissions of users here
+  </p>
+
+  <div class="col-md-4">
+    <div class="well">
+      <h3>Search for User</h3>
+      <%= form_tag users_path, method: :get do %>
+        <div class="form-group">
+          <%= label_tag "Email" %>
+          <%= text_field_tag :q, nil, class: "form-control" %>
+        </div>
+
+        <div class="form-group">
+          <%= submit_tag "Search", class: "btn btn-info" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+
+  <table class="table table-striped table-bordered table-hover">
+    <thead>
+      <th>User</th>
+      <th>Permission Level</th>
+    </thead>
+    <tbody>
+      <% @users.each do |user| %>
+        <tr>
+          <td><%= link_to user.email, user %></td>
+          <td><%= user.permission_level %></td>
+        </tr>
+      <% end %>  
+    </tbody>
+  </table>
+
+  <center>
+    <%= paginate @users %>
+  </center>
+</div>
