@@ -1,0 +1,25 @@
+<mat-toolbar color="primary" class="navbar navbar-dark bg-dark mb-5">
+<a class="navbar-brand" href="/">OpNEar Lab</a>
+  <div class="navbar-expand mr-auto">
+    <div class="navbar-nav">
+      <a class="nav-item nav-link active" href="#">Sign In</a>
+      <a class="nav-item nav-link active" href="#">Register</a>
+      <a class="nav-item nav-link active" href="#">Contact</a>
+    </div>
+  </div>
+  <div class="navbar-expand ml-auto navbar-nav">
+    <div class="navbar-nav">
+      <a class="nav-item nav-link" routerLink="/topology">
+        Topology
+      </a>
+      <a class="nav-item nav-link" routerLink="/nodeInfo">
+        Node Info
+      </a>
+      <a class="nav-item nav-link" routerLink="/ethernetInfo">
+        Ethernet Info
+      </a>
+    </div>
+  </div>
+</mat-toolbar>
+
+<router-outlet></router-outlet>
